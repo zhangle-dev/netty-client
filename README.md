@@ -20,10 +20,9 @@ public class ClientTest {
 	public static void main(String[] args) throws Exception {
 		
 		//创建客户端
-		IClient<HttpRequest, HttpResponse> client = new ClientBuilder<HttpRequest, HttpResponse>()
+		IClient<HttpRequest, HttpResponse> client = new ClientBuilder<HttpRequest, HttpResponse>(host,port)
 			.addHandler(new HttpRequestEncoder())
 			.addHandler(new HttpResponseDecoder())
-			.setHost(host).setPort(port)
 			.builder();
 		
 		//创建httprequest并发送
