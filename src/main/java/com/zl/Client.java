@@ -20,21 +20,21 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 
 /**
- * netty¿Í»§¶Ë£¬ÀïÃæ·â×°ÁË¶ÔnettyµÄ²Ù×÷
+ * nettyå®¢æˆ·ç«¯ï¼Œé‡Œé¢å°è£…äº†å¯¹nettyçš„æ“ä½œ
  * @author zl
  *
  */
 public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 
 	/**
-	 * Óë·şÎñÆ÷Ö®¼äµÄÁ¬½ÓÍ¨µÀ
+	 * ä¸æœåŠ¡å™¨ä¹‹é—´çš„è¿æ¥é€šé“
 	 */
 	private SocketChannel channel;
-	
+
 	private boolean isConnection = false;
-	
+
 	private LinkedBlockingQueue<RSP> queue = new LinkedBlockingQueue<RSP>();
-	
+
 	private ChannelHandlerContext ctx;
 
 	private EventLoopGroup eventLoopGroup;
@@ -42,24 +42,24 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	public Client() {
 	}
 	/**
-	 * 
-	 * @param host ·şÎñ¶ËÖ÷»úÃû
-	 * @param port ·şÎñ¶Ë¶Ë¿Ú
-	 * @throws Exception 
+	 *
+	 * @param host æœåŠ¡ç«¯ä¸»æœºå
+	 * @param port æœåŠ¡ç«¯ç«¯å£
+	 * @throws Exception
 	 */
 	public Client(String host,Integer port,List<ChannelHandler> handlers) throws Exception {
 		initClient(host,port,handlers);
 	}
 
 	/**
-	 * ³õÊ¼»¯Á¬½Ó
-	 * @param host ·şÎñ¶ËÖ÷»úÃû
-	 * @param port ·şÎñ¶Ë¶Ë¿Ú
-	 * @param handlers nettyÖĞhandler,Èç±àÂëÆ÷ºÍ½âÂëÆ÷
-	 * @throws Exception 
+	 * åˆå§‹åŒ–è¿æ¥
+	 * @param host æœåŠ¡ç«¯ä¸»æœºå
+	 * @param port æœåŠ¡ç«¯ç«¯å£
+	 * @param handlers nettyä¸­handler,å¦‚ç¼–ç å™¨å’Œè§£ç å™¨
+	 * @throws Exception
 	 */
 	private void initClient(String host, Integer port, final List<ChannelHandler> handlers) throws Exception {
-		
+
 		ChannelFuture future = null;
 		eventLoopGroup = new NioEventLoopGroup();
 		Bootstrap bootstrap = new Bootstrap();
@@ -70,18 +70,18 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 		bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 			@Override
 			protected void initChannel(SocketChannel socketChannel) throws Exception {
-				
+
 				ChannelPipeline pipeline = socketChannel.pipeline();
-				
+
 				for (ChannelHandler channelHandler : handlers) {
 					pipeline.addLast(channelHandler);
 				}
-				
-                pipeline.addLast(new ReadTimeoutHandler(5000));
+
+				pipeline.addLast(new ReadTimeoutHandler(5000));
 				pipeline.addLast(new WriteTimeoutHandler(5000));
 				pipeline.addLast(new SimpleChannelInboundHandler<RSP>() {
-					
-					
+
+
 					@Override
 					public void channelActive(ChannelHandlerContext ctx) throws Exception {
 						Client.this.ctx = ctx;
@@ -99,44 +99,44 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 		if (future.isSuccess()) {
 			channel = (SocketChannel) future.channel();
 			isConnection = true;
-			System.out.println("Á¬½Ó³É¹¦");
-			
+			System.out.println("è¿æ¥æˆåŠŸ");
+
 		} else {
-			throw new Exception("Á¬½ÓÊ§°Ü");
+			throw new Exception("è¿æ¥å¤±è´¥");
 		}
 	}
 
 	/**
-	 * ·¢ËÍÒ»¸öpacket°ü²¢·µ»ØÏàÓ¦
-	 * @param packet ÇëÇó°ü
+	 * å‘é€ä¸€ä¸ªpacketåŒ…å¹¶è¿”å›ç›¸åº”
+	 * @param packet è¯·æ±‚åŒ…
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public RSP execute(REQ packet) throws Exception {
-		if(!isConnection) 
-			throw new Exception("Á¬½ÓÎ´½¨Á¢");
+		if(!isConnection)
+			throw new Exception("è¿æ¥æœªå»ºç«‹");
 		RSP p;
-		
+
 		synchronized(queue) {
 			channel.writeAndFlush(packet);
 			p = queue.take();
-		}	
-		
+		}
+
 		return p;
 	}
 
 	/**
-	 * ·¢ËÍ¶à¸ö°ü£¬²¢·µ»ØpacketÁĞ±í
-	 * @param list ÇëÇó°üÁĞ±í
+	 * å‘é€å¤šä¸ªåŒ…ï¼Œå¹¶è¿”å›packetåˆ—è¡¨
+	 * @param list è¯·æ±‚åŒ…åˆ—è¡¨
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public List<RSP> execute(REQ... list) throws Exception {
-		if(!isConnection) 
-			throw new Exception("Á¬½ÓÎ´½¨Á¢");
-		
+		if(!isConnection)
+			throw new Exception("è¿æ¥æœªå»ºç«‹");
+
 		List<RSP> resultList = new ArrayList<RSP>();
-		
+
 		for (REQ interverPacket : list) {
 			synchronized(queue) {
 				channel.writeAndFlush(interverPacket);
@@ -148,46 +148,46 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	}
 
 	/**
-	 * ·¢ËÍÒ»¸ö°üÍê³ÉºóÖ´ĞĞ»Øµ÷·½·¨
-	 * @param packet ÇëÇó°ü
-	 * @param callback »Øµô·½·¨
-	 * @throws Exception 
+	 * å‘é€ä¸€ä¸ªåŒ…å®Œæˆåæ‰§è¡Œå›è°ƒæ–¹æ³•
+	 * @param packet è¯·æ±‚åŒ…
+	 * @param callback å›æ‰æ–¹æ³•
+	 * @throws Exception
 	 */
 	public void execute(REQ packet, ClientCallback<RSP> callback) throws Exception {
-		if(!isConnection) 
-			throw new Exception("Á¬½ÓÎ´½¨Á¢");
-		
+		if(!isConnection)
+			throw new Exception("è¿æ¥æœªå»ºç«‹");
+
 		RSP p;
 		synchronized(queue) {
 			channel.writeAndFlush(packet);
 			p = queue.take();
-		}	
+		}
 		callback.callback(p);
 	}
 
 	/**
-	 * ·¢ËÍ¶à¸ö°ü,Ã¿´ÎÍê³ÉºóÖ´ĞĞ»Øµ÷·½·¨
+	 * å‘é€å¤šä¸ªåŒ…,æ¯æ¬¡å®Œæˆåæ‰§è¡Œå›è°ƒæ–¹æ³•
 	 * @param callback
 	 * @param list
 	 * @throws Exception
 	 */
 	public void execute(ClientCallback<RSP> callback, REQ... list) throws Exception {
-		if(!isConnection) 
-			throw new Exception("Á¬½ÓÎ´½¨Á¢");
-		
+		if(!isConnection)
+			throw new Exception("è¿æ¥æœªå»ºç«‹");
+
 		for (REQ t : list) {
 			RSP p;
 			synchronized(queue) {
 				channel.writeAndFlush(t);
 				p = queue.take();
-			}	
+			}
 			callback.callback(p);
 		}
-		
+
 	}
-	
+
 	/**
-	 * ¹Ø±Õµ±Ç°Á¬½Ó
+	 * å…³é—­å½“å‰è¿æ¥
 	 */
 	public void close() {
 		eventLoopGroup.shutdownGracefully();

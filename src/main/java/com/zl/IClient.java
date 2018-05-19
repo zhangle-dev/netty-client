@@ -3,46 +3,46 @@ package com.zl;
 import java.util.List;
 
 /**
- * ÓÃÓÚ²âÊÔtcpÁ¬½ÓµÄ½Ó¿Ú
+ * ç”¨äºæµ‹è¯•tcpè¿æ¥çš„æ¥å£
  * @author zl
  *
  */
 public interface IClient<REQ,RSP> {
 
 	/**
-	 * ·¢ËÍÒ»¸öpacket°ü²¢·µ»ØÏàÓ¦
-	 * @param packet ÇëÇó°ü
+	 * å‘é€ä¸€ä¸ªpacketåŒ…å¹¶è¿”å›ç›¸åº”
+	 * @param packet è¯·æ±‚åŒ…
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	RSP execute(REQ packet) throws Exception;
-	
+
 	/**
-	 * ·¢ËÍ¶à¸ö°ü£¬²¢·µ»ØpacketÁĞ±í
-	 * @param list ÇëÇó°üÁĞ±í
+	 * å‘é€å¤šä¸ªåŒ…ï¼Œå¹¶è¿”å›packetåˆ—è¡¨
+	 * @param list è¯·æ±‚åŒ…åˆ—è¡¨
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	List<RSP> execute(REQ... list) throws Exception;
-	
+
 	/**
-	 * ·¢ËÍÒ»¸ö°üÍê³ÉºóÖ´ĞĞ»Øµ÷·½·¨
-	 * @param packet ÇëÇó°ü
-	 * @param callback »Øµô·½·¨
-	 * @throws Exception 
+	 * å‘é€ä¸€ä¸ªåŒ…å®Œæˆåæ‰§è¡Œå›è°ƒæ–¹æ³•
+	 * @param packet è¯·æ±‚åŒ…
+	 * @param callback å›æ‰æ–¹æ³•
+	 * @throws Exception
 	 */
 	void execute(REQ packet,ClientCallback<RSP> callback) throws Exception;
-	
+
 	/**
-	 * ·¢ËÍ¶à¸ö°ü,Ã¿´ÎÍê³ÉºóÖ´ĞĞ»Øµ÷·½·¨
+	 * å‘é€å¤šä¸ªåŒ…,æ¯æ¬¡å®Œæˆåæ‰§è¡Œå›è°ƒæ–¹æ³•
 	 * @param callback
 	 * @param list
 	 * @throws Exception
 	 */
 	void execute(ClientCallback<RSP> callback,REQ... list) throws Exception;
-	
+
 	/**
-	 * ¹Ø±Õµ±Ç°Á¬½Ó
+	 * å…³é—­å½“å‰è¿æ¥
 	 */
 	void close();
 }

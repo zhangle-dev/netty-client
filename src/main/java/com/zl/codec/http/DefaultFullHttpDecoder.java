@@ -16,17 +16,17 @@ public class DefaultFullHttpDecoder extends ChannelInboundHandlerAdapter {
 
 	private DefaultHttpResponse resp;
 	private List<DefaultHttpContent> contents = new ArrayList<DefaultHttpContent>();
-	
+
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		
+
 		if(msg instanceof DefaultHttpResponse) {
-			//如果是response
+			//濡傛灉鏄痳esponse
 			resp = (DefaultHttpResponse) msg;
 		}else if(msg instanceof DefaultLastHttpContent) {
-			//如果是LastHttpContent
+			//濡傛灉鏄疞astHttpContent
 			contents.add((DefaultHttpContent) msg);
-			
+
 			ByteBuf contentBuf = Unpooled.buffer();
 			for (DefaultHttpContent content : contents) {
 				ByteBuf buf = content.content();
@@ -35,7 +35,7 @@ public class DefaultFullHttpDecoder extends ChannelInboundHandlerAdapter {
 			DefaultFullHttpResponse response = new DefaultFullHttpResponse(resp.protocolVersion(), resp.status(),contentBuf);
 			super.channelRead(ctx, response);
 		}else {
-			//如果是HttpContent
+			//濡傛灉鏄疕ttpContent
 			contents.add((DefaultHttpContent) msg);
 		}
 	}

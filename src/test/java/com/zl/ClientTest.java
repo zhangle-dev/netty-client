@@ -12,21 +12,20 @@ public class ClientTest {
 
 	private static String host = "www.baidu.com";
 	private static Integer port = 80;
-	
+
 	public static void main(String[] args) throws Exception {
-		
-		//´´½¨¿Í»§¶Ë
+
+		//åˆ›å»ºå®¢æˆ·ç«¯
 		IClient<HttpRequest, HttpResponse> client = new ClientBuilder<HttpRequest, HttpResponse>(host,port)
-			.addHandler(new HttpRequestEncoder())
-			.addHandler(new HttpResponseDecoder())
-			.builder();
-		
-		//´´½¨httprequest²¢·¢ËÍ
+				.addHandler(new HttpRequestEncoder())
+				.addHandler(new HttpResponseDecoder())
+				.builder();
+
+		//åˆ›å»ºhttprequestå¹¶å‘é€
 		DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/");
 		HttpResponse response = client.execute(request);
-		
+
 		System.out.println(response);
 		client.close();
 	}
-
 }

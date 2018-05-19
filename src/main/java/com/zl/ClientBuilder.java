@@ -7,11 +7,11 @@ import java.util.List;
 import io.netty.channel.ChannelHandler;
 
 /**
- * ÓÃÓÚ´´½¨Client¶ÔÏó
+ * ç”¨äºåˆ›å»ºClientå¯¹è±¡
  * @author zl
  *
- * @param <REQ> ÇëÇó°üÀàĞÍ
- * @param <RSP> ÏìÓ¦°üÀàĞÍ
+ * @param <REQ> è¯·æ±‚åŒ…ç±»å‹
+ * @param <RSP> å“åº”åŒ…ç±»å‹
  */
 public class ClientBuilder<REQ,RSP> {
 
@@ -21,11 +21,11 @@ public class ClientBuilder<REQ,RSP> {
 
 	public ClientBuilder() {
 	}
-	
+
 	/**
-	 * 
-	 * @param host ·şÎñ¶ËµØÖ·
-	 * @param port ·şÎñ¶Ë¶Ë¿ÚºÅ
+	 *
+	 * @param host æœåŠ¡ç«¯åœ°å€
+	 * @param port æœåŠ¡ç«¯ç«¯å£å·
 	 */
 	public ClientBuilder(String host, Integer port) {
 		super();
@@ -37,25 +37,25 @@ public class ClientBuilder<REQ,RSP> {
 		this.host = host;
 		return this;
 	}
-	
+
 	public ClientBuilder<REQ,RSP> setPort(Integer port) {
 		this.port = port;
 		return this;
 	}
-	
+
 	public ClientBuilder<REQ,RSP> addHandler(ChannelHandler handler) {
 		list.add(handler);
 		return this;
 	}
-	
+
 	public ClientBuilder<REQ,RSP> addHandler(Collection<ChannelHandler> handlers) {
 		list.addAll(handlers);
 		return this;
 	}
-	
+
 	public IClient<REQ,RSP> builder() throws Exception{
 		if(host == null || port == null || host.isEmpty() || port == 0) {
-			throw new RuntimeException("Ö÷»úÃû»òÃÜÂë²»ÄÜÎª¿Õ");
+			throw new RuntimeException("ä¸»æœºåæˆ–å¯†ç ä¸èƒ½ä¸ºç©º");
 		}
 		return new Client<REQ,RSP>(host, port, list);
 	}
