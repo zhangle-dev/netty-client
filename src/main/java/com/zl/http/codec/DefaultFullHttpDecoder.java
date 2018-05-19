@@ -1,4 +1,4 @@
-package com.zl.codec.http;
+package com.zl.http.codec;
 
 import java.util.ArrayList;
 import java.util.List;
