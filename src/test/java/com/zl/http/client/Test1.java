@@ -18,10 +18,10 @@ public class Test1 {
 	}
 
 	private static void client() throws UnknownHostException, IOException {
-		Socket socket = new Socket("192.168.2.3", 80);
+		Socket socket = new Socket("localhost", 8080);
 		
-		String ss = "GET /users/sign_in HTTP/1.1\r\n" + 
-				"Host: 192.168.2.3\r\n" + 
+		String ss = "GET /hello HTTP/1.1\r\n" + 
+				"Host: 127.0.0.1\r\n" + 
 				"User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101 Firefox/60.0\r\n" + 
 				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" + 
 				"Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2\r\n" + 

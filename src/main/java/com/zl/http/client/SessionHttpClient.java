@@ -13,10 +13,9 @@ public class SessionHttpClient extends SimpleHttpClient {
 			request.headers().set("Cookie", cookie);			
 		}
 		DefaultFullHttpResponse response = super.request(request, host, port);
-		cookie = response.headers().get("Set-Cookie");
-		System.out.println("===========================================");
-		System.out.println(cookie);
-		System.out.println("===========================================");
+		if(cookie==null) {
+			cookie = response.headers().get("Set-Cookie");			
+		}
 		return response;
 	}
 }

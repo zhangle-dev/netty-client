@@ -28,6 +28,16 @@ public class SimpleHttpClient implements IHttpClient {
 
 	@Override
 	public DefaultFullHttpResponse request(DefaultFullHttpRequest request, String host,Integer port) {
+		
+		request.headers()
+			.add("Host","127.0.0.1")
+			.add("User-Agent","Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101 Firefox/60.0")
+			.add("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+			.add("Accept-Language","zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2")
+			.add("Accept-Encoding","gzip, deflate")
+			.add("Connection","keep-alive")
+			.add("Upgrade-Insecure-Requests","1");
+		
 		port = port == -1 ? 80 : port;
 		IClient<DefaultFullHttpRequest, DefaultFullHttpResponse> client = null;
 		try {
@@ -37,7 +47,7 @@ public class SimpleHttpClient implements IHttpClient {
 				.addHandler(new DefaultFullHttpDecoder())
 				.builder();
 		} catch (Exception e) {
-			new RuntimeException("连接失败",e);
+			throw new RuntimeException("连接失败",e);
 		}
 		try {
 			return client.execute(request);
@@ -137,6 +147,7 @@ public class SimpleHttpClient implements IHttpClient {
 			throw new RuntimeException("url格式不正确："+url,e);
 		}
 		DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, httpMethod, url2.getPath());
+		
 		ByteBuf buf = request.content();
 		buf.writeBytes(contentBytes);
 		DefaultFullHttpResponse response = request(request, url2.getHost(), url2.getPort());

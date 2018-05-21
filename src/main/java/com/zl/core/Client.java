@@ -105,6 +105,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 						super.channelActive(ctx);
 					}
 
+					@SuppressWarnings("unchecked")
 					@Override
 					public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 						queue.put((RSP) msg);
@@ -157,7 +158,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	}
 
 	/**
-	 * 发送一个packet包并返回相应
+	 * 发送一个packet包并返回响应
 	 * @param packet 请求包
 	 * @return
 	 * @throws TimeoutException 

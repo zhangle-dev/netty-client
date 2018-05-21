@@ -15,8 +15,10 @@ public class SimpleHttpClientTest {
 	
 	public static void main(String[] args) {
 		SimpleHttpClient client = new SessionHttpClient();
-		StringResponse result = client.getStringResult("http://www.baidu.com");
-		System.out.println(result.getContent());
+		
+		for (int i = 0; i < 5; i++) {
+			StringResponse result = client.getStringResult("http://localhost:8080/hello");
+			System.out.println(result.getContent());
+		}
 	}
-
 }
