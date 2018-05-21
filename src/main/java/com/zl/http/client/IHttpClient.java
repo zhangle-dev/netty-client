@@ -1,10 +1,13 @@
 package com.zl.http.client;
 
+import java.util.concurrent.TimeoutException;
+
 import com.zl.http.response.BytesResponse;
 import com.zl.http.response.StringResponse;
 
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpMethod;
 
 /**
  * 用于发送http请求的接口
@@ -15,9 +18,11 @@ public interface IHttpClient {
 	 * 发送请求
 	 * @param request 请求包
 	 * @param host 请求服务器主机名
+	 * @param port 请求服务器端口号
 	 * @return 响应信息
+	 * @throws TimeoutException 
 	 */
-	DefaultFullHttpResponse request(DefaultFullHttpRequest request,String host);
+	DefaultFullHttpResponse request(DefaultFullHttpRequest request,String host,Integer port) throws TimeoutException;
 	
 	/**
 	 * 以get的方式发送请求
@@ -92,46 +97,37 @@ public interface IHttpClient {
 	/**
 	 * 自定义请求方式去请求指定url并返回字符串响应
 	 * @param url 请求路径
-	 * @param requestType 请求方法，使用RequestType指定
+	 * @param httpMethod 请求方法
 	 * @param content 请求体
 	 * @return 字符串响应
 	 */
-	StringResponse customStringResult(String url,RequestType requestType,String content);
+	StringResponse customStringResult(String url,HttpMethod httpMethod,String content);
 	
 	/**
 	 * 自定义请求方式去请求指定url并返回字符串响应
 	 * @param url 请求路径
-	 * @param requestType 请求方法，使用RequestType指定
+	 * @param httpMethod 请求方法
 	 * @param contentBytes 请求体
 	 * @return 字符串响应
 	 */
-	StringResponse customStringResult(String url,RequestType requestType,byte[] contentBytes);
+	StringResponse customStringResult(String url,HttpMethod httpMethod,byte[] contentBytes);
 	
 	/**
 	 * 自定义请求方式去请求指定url并返回二进制响应
 	 * @param url 请求路径
-	 * @param requestType 请求方法，使用RequestType指定
+	 * @param httpMethod 请求方法
 	 * @param content 请求体
 	 * @return 二进制响应
 	 */
-	BytesResponse customBytesResult(String url,RequestType requestType,String content);
+	BytesResponse customBytesResult(String url,HttpMethod httpMethod,String content);
 	
 	/**
 	 * 自定义请求方式去请求指定url并返回二进制响应
 	 * @param url 请求路径
-	 * @param requestType 请求方法，使用RequestType指定
+	 * @param httpMethod 请求方法
 	 * @param contentBytes 请求体
 	 * @return 二进制响应
 	 */
-	BytesResponse customBytesResult(String url,RequestType requestType,byte[] contentBytes);
+	BytesResponse customBytesResult(String url,HttpMethod httpMethod,byte[] contentBytes);
 	
-	/**
-	 * 请求方式
-	 * @author zl
-	 *
-	 */
-	enum RequestType{
-		GET,POST,OPTIONS,HEAD,PUT,DELETE,TRACE,CONNECT 
-	}
-
 }

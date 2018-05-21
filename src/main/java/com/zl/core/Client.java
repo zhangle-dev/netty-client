@@ -131,6 +131,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	 * 发送一个packet包并返回相应
 	 * @param packet 请求包
 	 * @return
+	 * @throws TimeoutException 
 	 * @throws Exception
 	 */
 	public RSP execute(REQ packet) throws TimeoutException {
