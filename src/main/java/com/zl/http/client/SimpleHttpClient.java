@@ -28,6 +28,7 @@ public class SimpleHttpClient implements IHttpClient {
 
 	@Override
 	public DefaultFullHttpResponse request(DefaultFullHttpRequest request, String host,Integer port) {
+		port = port == -1 ? 80 : port;
 		IClient<DefaultFullHttpRequest, DefaultFullHttpResponse> client = null;
 		try {
 			client = new ClientBuilder<DefaultFullHttpRequest, DefaultFullHttpResponse>(host, port)
@@ -37,13 +38,13 @@ public class SimpleHttpClient implements IHttpClient {
 				.builder();
 		} catch (Exception e) {
 			new RuntimeException("连接失败",e);
-		}finally {
-			client.close();
 		}
 		try {
 			return client.execute(request);
 		} catch (TimeoutException e) {
 			return new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.REQUEST_TIMEOUT);
+		}finally {
+			client.close();
 		}
 	}
 

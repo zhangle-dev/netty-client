@@ -1,22 +1,29 @@
 package com.zl.core;
 
-import com.zl.exception.ClientChannlNotConnection;
-import com.zl.exception.NotTimeoutResponseException;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.timeout.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import com.zl.exception.ClientChannlNotConnectionException;
+import com.zl.exception.NotTimeoutResponseException;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 
 /**
  * netty客户端，里面封装了对netty的操作
@@ -90,10 +97,32 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 
 				pipeline.addLast(new ReadTimeoutHandler(readTimeoutSeconds));
 				pipeline.addLast(new WriteTimeoutHandler(writeTimeoutSeconds));
-				pipeline.addLast(new SimpleChannelInboundHandler<RSP>() {
-
+				pipeline.addLast(new ChannelInboundHandlerAdapter() {
 
 					@Override
+					public void channelActive(ChannelHandlerContext ctx) throws Exception {
+						Client.this.ctx = ctx;
+						super.channelActive(ctx);
+					}
+
+					@Override
+					public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+						queue.put((RSP) msg);
+					}
+
+					@Override
+					public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+						if (evt instanceof IdleStateEvent) {
+							if (idleRSP == null) {
+								throw new NotTimeoutResponseException();
+							}
+							queue.put(idleRSP);
+                        }
+					}
+
+					
+
+					/*@Override
 					public void channelActive(ChannelHandlerContext ctx) throws Exception {
 						Client.this.ctx = ctx;
 						super.channelActive(ctx);
@@ -112,7 +141,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 							}
 							queue.put(idleRSP);
                         }
-                    }
+                    }*/
                 });
 			}
 		});
@@ -136,7 +165,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	 */
 	public RSP execute(REQ packet) throws TimeoutException {
 		if(!isConnection)
-            throw new ClientChannlNotConnection("连接失败");
+            throw new ClientChannlNotConnectionException("连接失败");
 		RSP p;
 
 		synchronized(queue) {
@@ -154,7 +183,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	 */
 	public List<RSP> execute(REQ... list) throws TimeoutException {
 		if(!isConnection)
-            throw new ClientChannlNotConnection("连接失败");
+            throw new ClientChannlNotConnectionException("连接失败");
 
 		List<RSP> resultList = new ArrayList<RSP>();
 
@@ -175,7 +204,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	 */
 	public void execute(REQ packet, ClientCallback<RSP> callback) throws TimeoutException {
 		if(!isConnection)
-            throw new ClientChannlNotConnection("连接失败");
+            throw new ClientChannlNotConnectionException("连接失败");
 
 		RSP p;
 		synchronized(queue) {
@@ -193,7 +222,7 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	 */
 	public void execute(ClientCallback<RSP> callback, REQ... list) throws TimeoutException {
 		if(!isConnection)
-            throw new ClientChannlNotConnection("连接失败");
+            throw new ClientChannlNotConnectionException("连接失败");
 
 		for (REQ t : list) {
 			RSP p;

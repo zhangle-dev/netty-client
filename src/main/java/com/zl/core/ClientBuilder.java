@@ -24,7 +24,7 @@ public class ClientBuilder<REQ,RSP> {
 	//发送超时时间
 	private Integer writeTimeoutSeconds = 5;
 
-	private List<ChannelHandler> list = new ArrayList();
+	private List<ChannelHandler> list = new ArrayList<ChannelHandler>();
 
 	private RSP idleRSP;
 
@@ -32,7 +32,6 @@ public class ClientBuilder<REQ,RSP> {
 	}
 
 	/**
-	 *
 	 * @param host 服务端地址
 	 * @param port 服务端端口号
 	 */
