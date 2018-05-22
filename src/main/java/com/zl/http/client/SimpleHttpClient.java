@@ -45,6 +45,7 @@ public class SimpleHttpClient implements IHttpClient {
 				.addHandler(new HttpRequestEncoder())
 				.addHandler(new HttpResponseDecoder())
 				.addHandler(new DefaultFullHttpDecoder())
+				.setIdleRSP(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.REQUEST_TIMEOUT))
 				.builder();
 		} catch (Exception e) {
 			throw new RuntimeException("连接失败",e);

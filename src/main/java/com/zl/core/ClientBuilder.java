@@ -74,6 +74,11 @@ public class ClientBuilder<REQ,RSP> {
 		return this;
 	}
 
+	public ClientBuilder<REQ,RSP> setIdleRSP(RSP idleRSP) {
+		this.idleRSP = idleRSP;
+		return this;
+	}
+	
 	public IClient<REQ,RSP> builder() throws Exception{
 		if(host == null || port == null || host.isEmpty() || port == 0) {
 			throw new RuntimeException("主机名或密码不能为空");
@@ -81,7 +86,4 @@ public class ClientBuilder<REQ,RSP> {
 		return new Client<REQ,RSP>(host, port, list,readTimeoutSeconds,writeTimeoutSeconds,idleRSP);
 	}
 
-	public void setIdleRSP(RSP idleRSP) {
-		this.idleRSP = idleRSP;
-	}
 }

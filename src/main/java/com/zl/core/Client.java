@@ -12,7 +12,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -120,29 +119,6 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 							queue.put(idleRSP);
                         }
 					}
-
-					
-
-					/*@Override
-					public void channelActive(ChannelHandlerContext ctx) throws Exception {
-						Client.this.ctx = ctx;
-						super.channelActive(ctx);
-					}
-
-					@Override
-					protected void channelRead0(ChannelHandlerContext ctx, RSP msg) throws Exception {
-						queue.put(msg);
-					}
-
-                    @Override
-                    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-                        if (evt instanceof IdleStateEvent) {
-							if (idleRSP == null) {
-								throw new NotTimeoutResponseException();
-							}
-							queue.put(idleRSP);
-                        }
-                    }*/
                 });
 			}
 		});
