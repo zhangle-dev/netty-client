@@ -13,6 +13,7 @@ import com.zl.http.response.StringResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
@@ -35,7 +36,6 @@ public class SimpleHttpClient implements IHttpClient {
 			.add("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 			.add("Accept-Language","zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2")
 			.add("Accept-Encoding","gzip, deflate")
-			.add("Connection","keep-alive")
 			.add("Upgrade-Insecure-Requests","1");
 		
 		port = port == -1 ? 80 : port;
@@ -159,5 +159,8 @@ public class SimpleHttpClient implements IHttpClient {
 		
 		return new BytesResponse(response.status().code(), bytes);
 	}
+
+	@Override
+	public void close() {}
 
 }

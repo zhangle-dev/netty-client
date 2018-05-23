@@ -130,4 +130,6 @@ public interface IHttpClient {
 	 */
 	BytesResponse customBytesResult(String url,HttpMethod httpMethod,byte[] contentBytes);
 	
+	void close();
+	
 }
