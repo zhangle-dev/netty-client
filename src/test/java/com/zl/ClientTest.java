@@ -20,7 +20,7 @@ public class ClientTest {
 	private static String host = "localhost";
 	private static Integer port = 8080;
 
-	@Test
+//	@Test
 	public void clientTest() throws Exception {
 
 		//创建客户端

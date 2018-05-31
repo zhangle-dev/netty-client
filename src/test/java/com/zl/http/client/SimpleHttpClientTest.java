@@ -6,7 +6,7 @@ import com.zl.http.response.StringResponse;
 
 public class SimpleHttpClientTest {
 
-	@Test
+//	@Test
 	public void test() {
 		SimpleHttpClient client = new SimpleHttpClient();
 		StringResponse result = client.getStringResult("http://www.baidu.com");
