@@ -1,15 +1,15 @@
 package com.zl.core;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeoutException;
 
-import com.zl.exception.ClientChannlNotConnectionException;
-import com.zl.exception.NotTimeoutResponseException;
+import org.apache.log4j.Logger;
+
+import com.zl.core.exception.ConnectStatusException;
+import com.zl.core.exception.ReadTimeoutException;
+import com.zl.core.exception.WriteTimeoutException;
+import com.zl.core.interface_.IClient;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -20,9 +20,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import io.netty.util.concurrent.Future;
 
 /**
  * netty客户端，里面封装了对netty的操作
@@ -31,40 +31,42 @@ import io.netty.handler.timeout.WriteTimeoutHandler;
  */
 public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 
-	/**
+	/*
 	 * 与服务器之间的连接通道
 	 */
 	private SocketChannel channel;
-
-	/**
-	 * 连接是否打开
+	/*
+	 * 客户端状态
 	 */
-	private boolean isConnection = false;
-	private LinkedBlockingQueue<RSP> queue = new LinkedBlockingQueue<RSP>();
-	private ChannelHandlerContext ctx;
-	private EventLoopGroup eventLoopGroup;
-
-	//读取超时时间
+	private Status status;
+	/*
+	 * 读取超时时间
+	 */
 	private Integer readTimeoutSeconds;
-	//发送超时时间
+	/*
+	 * 发送超时时间
+	 */
 	private Integer writeTimeoutSeconds;
 
-    //发送超时时处理方法
-    private RSP idleRSP;
+	
+	private ChannelHandlerContext ctx;
+	private EventLoopGroup eventLoopGroup;
+	private Bootstrap bootstrap;
+	private Logger logger;
 
-
-	public Client() {
-	}
+	
 	/**
 	 *
 	 * @param host 服务端主机名
 	 * @param port 服务端端口
 	 * @throws Exception
 	 */
-	public Client(String host,Integer port,List<ChannelHandler> handlers,Integer readTimeoutSeconds,Integer writeTimeoutSeconds,RSP idleRSP) throws Exception {
+	public Client(String host,Integer port,List<ChannelHandler> handlers,Integer readTimeoutSeconds,Integer writeTimeoutSeconds) throws Exception {
+		status = Status.INIT;
+		logger = Logger.getLogger(Client.class);
+		logger.info("client core init ...");
 		this.readTimeoutSeconds = readTimeoutSeconds;
 		this.writeTimeoutSeconds = writeTimeoutSeconds;
-        this.idleRSP = idleRSP;
 		initClient(host,port,handlers);
 	}
 
@@ -77,9 +79,9 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	 */
 	private void initClient(String host, Integer port, final List<ChannelHandler> handlers) throws Exception {
 
-		ChannelFuture future = null;
+		logger.info("set host:" + host +",port:" + port);
 		eventLoopGroup = new NioEventLoopGroup();
-		Bootstrap bootstrap = new Bootstrap();
+		bootstrap = new Bootstrap();
 		bootstrap.channel(NioSocketChannel.class);
 		bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
 		bootstrap.group(eventLoopGroup);
@@ -104,139 +106,67 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 						super.channelActive(ctx);
 					}
 
-					@SuppressWarnings("unchecked")
 					@Override
 					public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-						queue.put((RSP) msg);
 					}
 
 					@Override
 					public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-						if (evt instanceof IdleStateEvent) {
-							if (idleRSP == null) {
-								throw new NotTimeoutResponseException();
-							}
-							queue.put(idleRSP);
-                        }
+						//TODO 失败
 					}
                 });
 			}
 		});
-		future = bootstrap.connect(host, port).sync();
-		if (future.isSuccess()) {
-			channel = (SocketChannel) future.channel();
-			isConnection = true;
-			System.out.println("连接成功");
+		
+	}
 
-		} else {
-			throw new Exception("连接失败");
+	@Override
+	public boolean start() {
+		logger.info("client core starting ...");
+		status = Status.STARTING;
+		
+		if(Status.INIT != status && Status.CLOSED != status) {
+			logger.error("current status is " + status + ",so not start!");
+			return false;
+		}
+		try {
+			channel = (SocketChannel) bootstrap.connect().sync().channel();
+			status = Status.RUN;
+			logger.info("connection success !");
+			return true;
+		} catch (InterruptedException e) {
+			logger.error("connect error,message is :" + e.getMessage());
+			return false;
 		}
 	}
-
-	/**
-	 * 发送一个packet包并返回响应
-	 * @param packet 请求包
-	 * @return
-	 * @throws TimeoutException 
-	 * @throws Exception
-	 */
-	public RSP execute(REQ packet) throws TimeoutException {
-		if(!isConnection)
-            throw new ClientChannlNotConnectionException("连接失败");
-		RSP p;
-
-		synchronized(queue) {
-			channel.writeAndFlush(packet);
-            p = getRsp();
-        }
-		return p;
+	
+	@Override
+	public Status status() {
+		return status;
+	}
+	
+	@Override
+	public Future<RSP> request(REQ packet) throws ReadTimeoutException, WriteTimeoutException, ConnectStatusException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public void request(REQ packet, ClientCallback<RSP> callback)
+			throws ReadTimeoutException, WriteTimeoutException, ConnectStatusException {
+		
 	}
 
-	/**
-	 * 发送多个包，并返回packet列表
-	 * @param list 请求包列表
-	 * @return
-	 * @throws Exception
-	 */
-	public List<RSP> execute(REQ... list) throws TimeoutException {
-		if(!isConnection)
-            throw new ClientChannlNotConnectionException("连接失败");
-
-		List<RSP> resultList = new ArrayList<RSP>();
-
-		for (REQ interverPacket : list) {
-			synchronized(queue) {
-				channel.writeAndFlush(interverPacket);
-                resultList.add(getRsp());
-			}
-		}
-		return resultList;
-	}
-
-	/**
-	 * 发送一个包完成后执行回调方法
-	 * @param packet 请求包
-	 * @param callback 回掉方法
-	 * @throws Exception
-	 */
-	public void execute(REQ packet, ClientCallback<RSP> callback) throws TimeoutException {
-		if(!isConnection)
-            throw new ClientChannlNotConnectionException("连接失败");
-
-		RSP p;
-		synchronized(queue) {
-			channel.writeAndFlush(packet);
-            p = getRsp();
-        }
-		callback.callback(p);
-	}
-
-    /**
-	 * 发送多个包,每次完成后执行回调方法
-	 * @param callback
-	 * @param list
-	 * @throws Exception
-	 */
-	public void execute(ClientCallback<RSP> callback, REQ... list) throws TimeoutException {
-		if(!isConnection)
-            throw new ClientChannlNotConnectionException("连接失败");
-
-		for (REQ t : list) {
-			RSP p;
-			synchronized(queue) {
-				channel.writeAndFlush(t);
-                p = getRsp();
-			}
-			callback.callback(p);
-		}
-
-	}
-
-	/**
-	 * 关闭当前连接
-	 */
+	@Override
 	public void close() {
-		eventLoopGroup.shutdownGracefully();
+		status = Status.CLOSING;
 		channel.close();
-		ctx.close();
-		isConnection = false;
+		try {
+			eventLoopGroup.shutdownGracefully().sync();
+		} catch (InterruptedException e) {
+			logger.error("close eventLoopGroup error,message is:" + e.getMessage());
+		}
+		logger.info("channel closed success!");
+		status = Status.CLOSED;
 	}
-
-    /**
-     * 从队列中获取一条响应
-     * @return
-     * @throws TimeoutException
-     */
-    private RSP getRsp() throws TimeoutException {
-        RSP p = null;
-        try {
-            p = queue.take();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (p.equals(idleRSP)) {
-            throw new TimeoutException();
-        }
-        return p;
-    }
+    	
 }

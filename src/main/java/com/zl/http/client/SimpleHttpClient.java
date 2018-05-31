@@ -5,7 +5,7 @@ import java.net.URL;
 import java.util.concurrent.TimeoutException;
 
 import com.zl.core.ClientBuilder;
-import com.zl.core.IClient;
+import com.zl.core.interface_.IClient;
 import com.zl.http.codec.DefaultFullHttpDecoder;
 import com.zl.http.response.BytesResponse;
 import com.zl.http.response.StringResponse;

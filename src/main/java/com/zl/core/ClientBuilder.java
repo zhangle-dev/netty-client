@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.zl.core.interface_.IClient;
+
 import io.netty.channel.ChannelHandler;
 
 /**
@@ -26,7 +28,6 @@ public class ClientBuilder<REQ,RSP> {
 
 	private List<ChannelHandler> list = new ArrayList<ChannelHandler>();
 
-	private RSP idleRSP;
 
 	public ClientBuilder() {
 	}
@@ -73,17 +74,12 @@ public class ClientBuilder<REQ,RSP> {
 		list.addAll(Arrays.asList(handlers));
 		return this;
 	}
-
-	public ClientBuilder<REQ,RSP> setIdleRSP(RSP idleRSP) {
-		this.idleRSP = idleRSP;
-		return this;
-	}
 	
 	public IClient<REQ,RSP> builder() throws Exception{
 		if(host == null || port == null || host.isEmpty() || port == 0) {
 			throw new RuntimeException("主机名或密码不能为空");
 		}
-		return new Client<REQ,RSP>(host, port, list,readTimeoutSeconds,writeTimeoutSeconds,idleRSP);
+		return new Client<REQ,RSP>(host, port, list,readTimeoutSeconds,writeTimeoutSeconds);
 	}
 
 }
