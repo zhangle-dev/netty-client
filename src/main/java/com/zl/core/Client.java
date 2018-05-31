@@ -1,6 +1,10 @@
 package com.zl.core;
 
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 
@@ -53,6 +57,8 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	private EventLoopGroup eventLoopGroup;
 	private Bootstrap bootstrap;
 	private Logger logger;
+	@SuppressWarnings("rawtypes")
+	private BlockingQueue responseQueue = new LinkedBlockingQueue();
 
 	
 	/**
@@ -106,13 +112,16 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 						super.channelActive(ctx);
 					}
 
+					@SuppressWarnings("unchecked")
 					@Override
 					public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+						responseQueue.put((RSP) msg);
 					}
 
+					@SuppressWarnings("unchecked")
 					@Override
 					public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-						//TODO 失败
+						responseQueue.put(new ReadTimeoutException());
 					}
                 });
 			}
@@ -146,14 +155,63 @@ public class Client<REQ,RSP> implements IClient<REQ,RSP> {
 	}
 	
 	@Override
-	public Future<RSP> request(REQ packet) throws ReadTimeoutException, WriteTimeoutException, ConnectStatusException {
-		// TODO Auto-generated method stub
-		return null;
+	public Future<RSP> request(REQ packet) throws ConnectStatusException {
+		
+		if(status != Status.RUN) {
+			throw new ConnectStatusException();
+		}
+		return eventLoopGroup.submit(new Callable<RSP>() {
+			@SuppressWarnings("unchecked")
+			@Override
+			public RSP call() throws ReadTimeoutException, InterruptedException, WriteTimeoutException {
+				synchronized(responseQueue) {
+					try {
+						ctx.writeAndFlush(packet);						
+					}catch (Exception e) {
+						throw new WriteTimeoutException();
+					}
+					Object take = responseQueue.take();
+					if(take instanceof ReadTimeoutException) {
+						throw (ReadTimeoutException)take;
+					}else {
+						return (RSP) take;
+					}
+				}
+			}
+		});
 	}
 	@Override
-	public void request(REQ packet, ClientCallback<RSP> callback)
+	public void request(REQ packet, ClientCallback<RSP> callback) 
 			throws ReadTimeoutException, WriteTimeoutException, ConnectStatusException {
-		
+			Future<RSP> future = request(packet);
+			try {
+				callback.callback(future.get());
+			} catch (InterruptedException | ExecutionException e) {
+				Throwable cause = e.getCause();
+				if(cause instanceof ReadTimeoutException) {
+					throw (ReadTimeoutException)cause;
+				}else if(cause instanceof WriteTimeoutException) {
+					throw (WriteTimeoutException)cause;
+				}
+			}
+	}
+	
+	@Override
+	public RSP execute(REQ packet) 
+			throws ReadTimeoutException, WriteTimeoutException, ConnectStatusException {
+			Future<RSP> future = request(packet);
+			RSP rsp = null;
+			try {
+				rsp = future.get();
+			} catch (InterruptedException | ExecutionException e) {
+				Throwable cause = e.getCause();
+				if(cause instanceof ReadTimeoutException) {
+					throw (ReadTimeoutException)cause;
+				}else if(cause instanceof WriteTimeoutException) {
+					throw (WriteTimeoutException)cause;
+				}
+			}
+			return rsp;
 	}
 
 	@Override

@@ -2,9 +2,11 @@ package com.zl.http.client;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.TimeoutException;
 
 import com.zl.core.ClientBuilder;
+import com.zl.core.exception.ConnectStatusException;
+import com.zl.core.exception.ReadTimeoutException;
+import com.zl.core.exception.WriteTimeoutException;
 import com.zl.core.interface_.IClient;
 import com.zl.http.codec.DefaultFullHttpDecoder;
 import com.zl.http.response.BytesResponse;
@@ -13,7 +15,6 @@ import com.zl.http.response.StringResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
@@ -45,15 +46,16 @@ public class SimpleHttpClient implements IHttpClient {
 				.addHandler(new HttpRequestEncoder())
 				.addHandler(new HttpResponseDecoder())
 				.addHandler(new DefaultFullHttpDecoder())
-				.setIdleRSP(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.REQUEST_TIMEOUT))
 				.builder();
 		} catch (Exception e) {
 			throw new RuntimeException("连接失败",e);
 		}
 		try {
 			return client.execute(request);
-		} catch (TimeoutException e) {
+		} catch (ReadTimeoutException|WriteTimeoutException e) {
 			return new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.REQUEST_TIMEOUT);
+		} catch (ConnectStatusException e) {
+			throw new RuntimeException("连接失败",e);
 		}finally {
 			client.close();
 		}
